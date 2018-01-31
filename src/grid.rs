@@ -28,8 +28,8 @@ impl Grid {
     }
 
     fn set(&mut self, index: usize, bit: u8, disc: Disc) {
-        let &mut Grid(mut grid) = self;
-        grid[index] = match (bit, disc) {
+        let &mut Grid(ref mut grid) = self;
+        grid[index] |= match (bit, disc) {
             (0, Disc::R) => 0b00000001,
             (0, Disc::B) => 0b00000010,
             (1, Disc::R) => 0b00000100,
@@ -40,14 +40,11 @@ impl Grid {
             (3, Disc::B) => 0b10000000,
             _ => unreachable!(),
         };
-        println!("Post-set: {:b}", grid[index]);
     }
 
     fn get(&self, index: usize, bit: u8) -> Option<Disc> {
         let &Grid(grid) = self;
-        println!("Pre-mask with index {} and bit {}: {:b}", index, bit, grid[index]);
         let masked = grid[index] & (3 << (bit * 2));
-        println!("Post-mask: {:b}", grid[index]);
         match masked >> (bit * 2) {
             0b00000000 => None,
             0b00000001 => Some(Disc::R),
@@ -59,28 +56,28 @@ impl Grid {
 
 impl fmt::Display for Grid {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "|")?;
-        for _ in 0..COLS { write!(f, "-------")?; }
+        write!(f, "-")?;
+        for _ in 0..COLS { write!(f, "--------")?; }
         for row in 0..ROWS {
 
             write!(f, "\n|")?;
-            for _ in 0..COLS { write!(f, "      |")?; }
+            for _ in 0..COLS { write!(f, "       |")?; }
 
             write!(f, "\n|")?;
             for col in 0..COLS {
-                let (index, bit) = Self::index(row, col);
+                let (index, bit) = Self::index(ROWS - row - 1, col);
                 match self.get(index, bit) {
-                    None => write!(f, "      |")?,
+                    None => write!(f, "       |")?,
                     Some(Disc::R) => write!(f, "   R   |")?,
                     Some(Disc::B) => write!(f, "   B   |")?,
                 }
             }
 
-            write!(f, "\n|")?; 
-            for _ in 0..COLS { write!(f, "      |")?; }
+            write!(f, "\n|")?;
+            for _ in 0..COLS { write!(f, "       |")?; }
 
             write!(f, "\n-")?;
-            for _ in 0..COLS { write!(f, "-------")?; }
+            for _ in 0..COLS { write!(f, "--------")?; }
         }
         Ok(())
     }
@@ -93,7 +90,7 @@ mod tests {
 
     #[test]
     fn test_empty() {
-        // println!("{}", Grid::new());
+        println!("{}", Grid::new());
     }
 
     #[test]
@@ -103,4 +100,27 @@ mod tests {
         println!("{}", grid);
     }
 
+    #[test]
+    fn test_column() {
+        let mut grid = Grid::new();
+        for row in 0..ROWS {
+            grid.drop(3, Disc::B);
+        }
+        println!("{}", grid);
+    }
+
+    #[test]
+    fn test_checker() {
+        let mut grid = Grid::new();
+        for col in 0..COLS {
+            for row in 0..ROWS {
+                if (col + row) % 2 == 0 {
+                    grid.drop(col, Disc::R);
+                } else {
+                    grid.drop(col, Disc::B);
+                }
+            } 
+        } 
+        println!("{}", grid);
+    }
 }
