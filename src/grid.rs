@@ -1,56 +1,52 @@
 use std::fmt;
 
-const SIZE: u8 = 11;
-const ROWS: u8 = 6;
-const COLS: u8 = 7;
+const ROWS: usize = 6;
+const COLS: usize = 7;
 
-pub struct Grid ([u8; SIZE as usize]);
+pub struct Grid ([u16; ROWS as usize]);
 pub enum Disc { R, B }
 
 impl Grid {
-    pub fn new() -> Self {
-        Grid([0; SIZE as usize])
-    }
+    pub fn new() -> Self { Grid([0; ROWS]) }
 
-    pub fn drop(&mut self, col: u8, disc: Disc) {
+    pub fn drop(&mut self, col: usize, disc: Disc) {
         for row in 0..ROWS {
-            let (index, bit) = Self::index(row, col);
-            if let None = self.get(index, bit) {
-                self.set(index, bit, disc);
+            if let None = self.get(row, col) {
+                self.set(row, col, disc);
                 return
             }
         }
     }
 
-    fn index(row: u8, col: u8) -> (usize, u8) {
-        let index = row * COLS + col;
-        ((index / 4) as usize, index % 4)
-    }
-
-    fn set(&mut self, index: usize, bit: u8, disc: Disc) {
-        let &mut Grid(ref mut grid) = self;
-        grid[index] |= match (bit, disc) {
-            (0, Disc::R) => 0b00000001,
-            (0, Disc::B) => 0b00000010,
-            (1, Disc::R) => 0b00000100,
-            (1, Disc::B) => 0b00001000,
-            (2, Disc::R) => 0b00010000,
-            (2, Disc::B) => 0b00100000,
-            (3, Disc::R) => 0b01000000,
-            (3, Disc::B) => 0b10000000,
-            _ => unreachable!(),
-        };
-    }
-
-    fn get(&self, index: usize, bit: u8) -> Option<Disc> {
+    pub fn get(&self, row: usize, col: usize) -> Option<Disc> {
         let &Grid(grid) = self;
-        let masked = grid[index] & (3 << (bit * 2));
-        match masked >> (bit * 2) {
+        match (grid[row] & (3 << col * 2)) >> col * 2 {
             0b00000000 => None,
             0b00000001 => Some(Disc::R),
             0b00000010 => Some(Disc::B),
             _ => unreachable!(),
         }
+    }
+
+    fn set(&mut self, row: usize, col: usize, disc: Disc) {
+        let &mut Grid(ref mut grid) = self;
+        grid[row] |= match (col*2, disc) {
+            (0  , Disc::R) => 0b0000000000000001,
+            (0  , Disc::B) => 0b0000000000000010,
+            (2  , Disc::R) => 0b0000000000000100,
+            (2  , Disc::B) => 0b0000000000001000,
+            (4  , Disc::R) => 0b0000000000010000,
+            (4  , Disc::B) => 0b0000000000100000,
+            (6  , Disc::R) => 0b0000000001000000,
+            (6  , Disc::B) => 0b0000000010000000,
+            (8  , Disc::R) => 0b0000000100000000,
+            (8  , Disc::B) => 0b0000001000000000,
+            (10 , Disc::R) => 0b0000010000000000,
+            (10 , Disc::B) => 0b0000100000000000,
+            (12 , Disc::R) => 0b0001000000000000,
+            (12 , Disc::B) => 0b0010000000000000,
+            _ => unreachable!(),
+        };
     }
 }
 
@@ -65,8 +61,7 @@ impl fmt::Display for Grid {
 
             write!(f, "\n|")?;
             for col in 0..COLS {
-                let (index, bit) = Self::index(ROWS - row - 1, col);
-                match self.get(index, bit) {
+                match self.get(ROWS - row - 1, col) {
                     None => write!(f, "       |")?,
                     Some(Disc::R) => write!(f, "   R   |")?,
                     Some(Disc::B) => write!(f, "   B   |")?,
@@ -119,8 +114,8 @@ mod tests {
                 } else {
                     grid.drop(col, Disc::B);
                 }
-            } 
-        } 
+            }
+        }
         println!("{}", grid);
     }
 }
