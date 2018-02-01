@@ -4,7 +4,7 @@ const ROWS: usize = 6;
 const COLS: usize = 7;
 
 pub struct Grid ([u16; ROWS as usize]);
-pub enum Disc { R, B }
+pub enum Disc { R, Y }
 
 impl Grid {
     pub fn new() -> Self { Grid([0; ROWS]) }
@@ -20,10 +20,10 @@ impl Grid {
 
     pub fn get(&self, row: usize, col: usize) -> Option<Disc> {
         let &Grid(grid) = self;
-        match (grid[row] & (3 << col * 2)) >> col * 2 {
+        match (grid[row] >> col*2) & 3 {
             0b00000000 => None,
             0b00000001 => Some(Disc::R),
-            0b00000010 => Some(Disc::B),
+            0b00000010 => Some(Disc::Y),
             _ => unreachable!(),
         }
     }
@@ -32,19 +32,19 @@ impl Grid {
         let &mut Grid(ref mut grid) = self;
         grid[row] |= match (col*2, disc) {
             (0  , Disc::R) => 0b0000000000000001,
-            (0  , Disc::B) => 0b0000000000000010,
+            (0  , Disc::Y) => 0b0000000000000010,
             (2  , Disc::R) => 0b0000000000000100,
-            (2  , Disc::B) => 0b0000000000001000,
+            (2  , Disc::Y) => 0b0000000000001000,
             (4  , Disc::R) => 0b0000000000010000,
-            (4  , Disc::B) => 0b0000000000100000,
+            (4  , Disc::Y) => 0b0000000000100000,
             (6  , Disc::R) => 0b0000000001000000,
-            (6  , Disc::B) => 0b0000000010000000,
+            (6  , Disc::Y) => 0b0000000010000000,
             (8  , Disc::R) => 0b0000000100000000,
-            (8  , Disc::B) => 0b0000001000000000,
+            (8  , Disc::Y) => 0b0000001000000000,
             (10 , Disc::R) => 0b0000010000000000,
-            (10 , Disc::B) => 0b0000100000000000,
+            (10 , Disc::Y) => 0b0000100000000000,
             (12 , Disc::R) => 0b0001000000000000,
-            (12 , Disc::B) => 0b0010000000000000,
+            (12 , Disc::Y) => 0b0010000000000000,
             _ => unreachable!(),
         };
     }
@@ -64,7 +64,7 @@ impl fmt::Display for Grid {
                 match self.get(ROWS - row - 1, col) {
                     None => write!(f, "       |")?,
                     Some(Disc::R) => write!(f, "   R   |")?,
-                    Some(Disc::B) => write!(f, "   B   |")?,
+                    Some(Disc::Y) => write!(f, "   Y   |")?,
                 }
             }
 
@@ -98,8 +98,8 @@ mod tests {
     #[test]
     fn test_column() {
         let mut grid = Grid::new();
-        for row in 0..ROWS {
-            grid.drop(3, Disc::B);
+        for _ in 0..ROWS {
+            grid.drop(3, Disc::Y);
         }
         println!("{}", grid);
     }
@@ -112,7 +112,7 @@ mod tests {
                 if (col + row) % 2 == 0 {
                     grid.drop(col, Disc::R);
                 } else {
-                    grid.drop(col, Disc::B);
+                    grid.drop(col, Disc::Y);
                 }
             }
         }
