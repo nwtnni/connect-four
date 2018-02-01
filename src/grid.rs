@@ -1,15 +1,49 @@
 use std::fmt;
 
-const ROWS: usize = 6;
-const COLS: usize = 7;
+const ROWS: u8 = 6;
+const COLS: u8 = 7;
 
+const HORIZONTAL: [(u8, u8); 24] = [
+    (0, 0), (0, 1), (0, 2), (0, 3),
+    (1, 0), (1, 1), (1, 2), (1, 3),
+    (2, 0), (2, 1), (2, 2), (2, 3),
+    (3, 0), (3, 1), (3, 2), (3, 3),
+    (4, 0), (4, 1), (4, 2), (4, 3),
+    (5, 0), (5, 1), (5, 2), (5, 3),
+];
+
+const VERTICAL: [(u8, u8); 21] = [
+    (0, 0), (1, 0), (2, 0),
+    (0, 1), (1, 1), (2, 1),
+    (0, 2), (1, 2), (2, 2),
+    (0, 3), (1, 3), (2, 3),
+    (0, 4), (1, 4), (2, 4),
+    (0, 5), (1, 5), (2, 5),
+    (0, 6), (1, 6), (2, 6),
+];
+
+const LEFT_DIAGONAL: [(u8, u8); 12] = [
+    (5, 0), (5, 1), (5, 2), (5, 3),
+    (4, 0), (4, 1), (4, 2), (4, 3),
+    (3, 0), (3, 1), (3, 2), (3, 3),
+];
+
+const RIGHT_DIAGONAL: [(u8, u8); 12] = [
+    (0, 0), (0, 1), (0, 2), (0, 3),
+    (1, 0), (1, 1), (1, 2), (1, 3),
+    (2, 0), (2, 1), (2, 2), (2, 3),
+];
+
+#[derive(Clone, Eq, PartialEq, Hash)]
 pub struct Grid ([u16; ROWS as usize]);
+
+#[derive(Copy, Clone)]
 pub enum Disc { R, Y }
 
 impl Grid {
-    pub fn new() -> Self { Grid([0; ROWS]) }
+    pub fn new() -> Self { Grid([0; ROWS as usize]) }
 
-    pub fn drop(&mut self, col: usize, disc: Disc) {
+    pub fn drop(&mut self, col: u8, disc: Disc) {
         for row in 0..ROWS {
             if let None = self.get(row, col) {
                 self.set(row, col, disc);
@@ -18,18 +52,59 @@ impl Grid {
         }
     }
 
-    pub fn get(&self, row: usize, col: usize) -> Option<Disc> {
+    pub fn horizontal(&self, row: u8, col: u8) -> (i32, i32) {
         let &Grid(grid) = self;
-        match (grid[row] >> col*2) & 3 {
-            0b00000000 => None,
-            0b00000001 => Some(Disc::R),
-            0b00000010 => Some(Disc::Y),
+        let row = row as usize;
+        Self::count(grid[row] >> col*2)
+    }
+
+    pub fn vertical(&self, row: u8, col: u8) -> (i32, i32) {
+        let &Grid(grid) = self;
+        let row = row as usize;
+        Self::count((grid[row] & (0b11 << col*2))
+              + (grid[row + 1] & (0b11 << col*2))
+              + (grid[row + 2] & (0b11 << col*2))
+              + (grid[row + 3] & (0b11 << col*2)))
+    }
+
+    pub fn left_diagonal(&self, row: u8, col: u8) -> (i32, i32) {
+        let &Grid(grid) = self;
+        let row = row as usize;
+        Self::count((grid[row] & (0b11 << col*2))
+              + (grid[row - 1] & (0b11 << col*2 + 2))
+              + (grid[row - 2] & (0b11 << col*2 + 4))
+              + (grid[row - 3] & (0b11 << col*2 + 6)))
+    }
+
+    pub fn right_diagonal(&self, row: u8, col: u8) -> (i32, i32) {
+        let &Grid(grid) = self;
+        let row = row as usize;
+        Self::count((grid[row] & (0b11 << col*2))
+              + (grid[row + 1] & (0b11 << col*2 + 2))
+              + (grid[row + 2] & (0b11 << col*2 + 4))
+              + (grid[row + 3] & (0b11 << col*2 + 6)))
+    }
+
+    pub fn get(&self, row: u8, col: u8) -> Option<Disc> {
+        let &Grid(grid) = self;
+        let row = row as usize;
+        match (grid[row] >> col*2) & 0b11 {
+            0b00 => None,
+            0b01 => Some(Disc::R),
+            0b10 => Some(Disc::Y),
             _ => unreachable!(),
         }
     }
 
-    fn set(&mut self, row: usize, col: usize, disc: Disc) {
+    fn count(pieces: u16) -> (i32, i32) {
+        let r = (pieces & 0b01010101).count_ones() as i32;
+        let y = (pieces & 0b10101010).count_ones() as i32;
+        if r > 0 && y > 0 { (0, 0) } else { (r, y) }
+    }
+
+    fn set(&mut self, row: u8, col: u8, disc: Disc) {
         let &mut Grid(ref mut grid) = self;
+        let row = row as usize;
         grid[row] |= match (col*2, disc) {
             (0  , Disc::R) => 0b0000000000000001,
             (0  , Disc::Y) => 0b0000000000000010,
