@@ -1,7 +1,7 @@
 use std::fmt;
 
-const ROWS: u8 = 6;
-const COLS: u8 = 7;
+pub const ROWS: u8 = 6;
+pub const COLS: u8 = 7;
 
 const HORIZONTAL: [(u8, u8); 24] = [
     (0, 0), (0, 1), (0, 2), (0, 3),
@@ -34,19 +34,27 @@ const RIGHT_DIAGONAL: [(u8, u8); 12] = [
     (2, 0), (2, 1), (2, 2), (2, 3),
 ];
 
-#[derive(Clone, Eq, PartialEq, Hash)]
+#[derive(Clone, Eq, PartialEq)]
 pub struct Grid ([u16; ROWS as usize]);
 
-#[derive(Copy, Clone)]
-pub enum Disc { R, Y }
+#[derive(Copy, Clone, Eq, PartialEq)]
+pub enum Color { W, B }
 
 impl Grid {
     pub fn new() -> Self { Grid([0; ROWS as usize]) }
 
-    pub fn drop(&mut self, col: u8, disc: Disc) {
+    pub fn next(&self, col: u8, color: Color) -> Option<Grid> {
+        self.get(ROWS - 1, col).map(|_| {
+            let mut grid = self.clone();
+            grid.drop(col, color);
+            grid
+        })
+    }
+
+    pub fn drop(&mut self, col: u8, color: Color) {
         for row in 0..ROWS {
             if let None = self.get(row, col) {
-                self.set(row, col, disc);
+                self.set(row, col, color);
                 return
             }
         }
@@ -85,41 +93,41 @@ impl Grid {
               + (grid[row + 3] & (0b11 << col*2 + 6)))
     }
 
-    pub fn get(&self, row: u8, col: u8) -> Option<Disc> {
+    pub fn get(&self, row: u8, col: u8) -> Option<Color> {
         let &Grid(grid) = self;
         let row = row as usize;
         match (grid[row] >> col*2) & 0b11 {
             0b00 => None,
-            0b01 => Some(Disc::R),
-            0b10 => Some(Disc::Y),
+            0b01 => Some(Color::W),
+            0b10 => Some(Color::B),
             _ => unreachable!(),
         }
     }
 
     fn count(pieces: u16) -> (i32, i32) {
-        let r = (pieces & 0b01010101).count_ones() as i32;
-        let y = (pieces & 0b10101010).count_ones() as i32;
-        if r > 0 && y > 0 { (0, 0) } else { (r, y) }
+        let w = (pieces & 0b01010101).count_ones() as i32;
+        let b = (pieces & 0b10101010).count_ones() as i32;
+        if w > 0 && b > 0 { (0, 0) } else { (w, b) }
     }
 
-    fn set(&mut self, row: u8, col: u8, disc: Disc) {
+    fn set(&mut self, row: u8, col: u8, color: Color) {
         let &mut Grid(ref mut grid) = self;
         let row = row as usize;
-        grid[row] |= match (col*2, disc) {
-            (0  , Disc::R) => 0b0000000000000001,
-            (0  , Disc::Y) => 0b0000000000000010,
-            (2  , Disc::R) => 0b0000000000000100,
-            (2  , Disc::Y) => 0b0000000000001000,
-            (4  , Disc::R) => 0b0000000000010000,
-            (4  , Disc::Y) => 0b0000000000100000,
-            (6  , Disc::R) => 0b0000000001000000,
-            (6  , Disc::Y) => 0b0000000010000000,
-            (8  , Disc::R) => 0b0000000100000000,
-            (8  , Disc::Y) => 0b0000001000000000,
-            (10 , Disc::R) => 0b0000010000000000,
-            (10 , Disc::Y) => 0b0000100000000000,
-            (12 , Disc::R) => 0b0001000000000000,
-            (12 , Disc::Y) => 0b0010000000000000,
+        grid[row] |= match (col*2, color) {
+            (0  , Color::W) => 0b0000000000000001,
+            (0  , Color::B) => 0b0000000000000010,
+            (2  , Color::W) => 0b0000000000000100,
+            (2  , Color::B) => 0b0000000000001000,
+            (4  , Color::W) => 0b0000000000010000,
+            (4  , Color::B) => 0b0000000000100000,
+            (6  , Color::W) => 0b0000000001000000,
+            (6  , Color::B) => 0b0000000010000000,
+            (8  , Color::W) => 0b0000000100000000,
+            (8  , Color::B) => 0b0000001000000000,
+            (10 , Color::W) => 0b0000010000000000,
+            (10 , Color::B) => 0b0000100000000000,
+            (12 , Color::W) => 0b0001000000000000,
+            (12 , Color::B) => 0b0010000000000000,
             _ => unreachable!(),
         };
     }
@@ -138,8 +146,8 @@ impl fmt::Display for Grid {
             for col in 0..COLS {
                 match self.get(ROWS - row - 1, col) {
                     None => write!(f, "       |")?,
-                    Some(Disc::R) => write!(f, "   R   |")?,
-                    Some(Disc::Y) => write!(f, "   Y   |")?,
+                    Some(Color::W) => write!(f, "   W   |")?,
+                    Some(Color::B) => write!(f, "   B   |")?,
                 }
             }
 
@@ -166,7 +174,7 @@ mod tests {
     #[test]
     fn test_single() {
         let mut grid = Grid::new();
-        grid.drop(0, Disc::R);
+        grid.drop(0, Color::R);
         println!("{}", grid);
     }
 
@@ -174,7 +182,7 @@ mod tests {
     fn test_column() {
         let mut grid = Grid::new();
         for _ in 0..ROWS {
-            grid.drop(3, Disc::Y);
+            grid.drop(3, Color::Y);
         }
         println!("{}", grid);
     }
@@ -185,9 +193,9 @@ mod tests {
         for col in 0..COLS {
             for row in 0..ROWS {
                 if (col + row) % 2 == 0 {
-                    grid.drop(col, Disc::R);
+                    grid.drop(col, Color::R);
                 } else {
-                    grid.drop(col, Disc::Y);
+                    grid.drop(col, Color::Y);
                 }
             }
         }
