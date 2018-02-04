@@ -1,11 +1,12 @@
 use std::i32::{MIN, MAX};
+use player::*;
 use grid::*;
 
 const ORDER: [u8; COLS as usize] = [3, 4, 2, 5, 1, 6, 0];
 
 pub struct State {
-    grid: Grid,
-    color: Color,
+    pub grid: Grid,
+    pub color: Color,
 }
 
 impl State {
@@ -20,19 +21,33 @@ impl State {
     }
 }
 
-pub trait Player {
-    fn take_turn(&self, state: &State, color: Color) -> u8;
-}
-
 pub trait Scorer {
     fn score(&self, state: &State, color: Color) -> i32;
 }
 
-pub fn select_move<P: Player>(state: &State, color: Color, player: &P) -> u8 {
-    player.take_turn(state, color)
+impl Scorer for CPU {
+    fn score(&self, state: &State, color: Color) -> i32 {
+        0
+
+    }
 }
 
-pub fn minimax<S: Scorer>(scorer: &S, state: &State, color: Color, depth: u8, alpha: i32, beta: i32) -> i32 {
+pub fn best_move<S: Scorer>(scorer: &S, grid: &Grid, color: Color, depth: u8) -> u8 {
+    let state = State { grid: grid.clone(), color };
+    let (mut alpha, beta) = (MIN, MAX);
+    let (mut max, mut column) = (MIN, 0);
+    for &col in &ORDER {
+        if let Some(child) = state.next(col) {
+            let score = minimax(scorer, &child, color, depth - 1, alpha, beta);
+            if score > alpha { alpha = score }
+            if score > max { max = score; column = col }
+            if beta <= alpha { break }
+        }
+    }
+    column
+}
+
+fn minimax<S: Scorer>(scorer: &S, state: &State, color: Color, depth: u8, alpha: i32, beta: i32) -> i32 {
     if depth == 0 {
         scorer.score(state, color)
     } else if state.color == color {
@@ -40,8 +55,8 @@ pub fn minimax<S: Scorer>(scorer: &S, state: &State, color: Color, depth: u8, al
         let mut max = MIN;
         for child in ORDER.iter().filter_map(|&col| state.next(col)) {
             let score = minimax(scorer, &child, color, depth - 1, alpha, beta);
-            alpha = if score > alpha { score } else { alpha };
-            max = if score > max { score } else { max };
+            if score > alpha { alpha = score }
+            if score > max { max = score }
             if beta <= alpha { break }
         }
         max
@@ -50,8 +65,8 @@ pub fn minimax<S: Scorer>(scorer: &S, state: &State, color: Color, depth: u8, al
         let mut min = MAX;
         for child in ORDER.iter().filter_map(|&col| state.next(col)) {
             let score = minimax(scorer, &child, color, depth - 1, alpha, beta);
-            beta = if score < beta { score } else { beta };
-            min = if score < min { score } else { min };
+            if score < beta { beta = score }
+            if score < min { min = score }
             if beta <= alpha { break }
         }
         min

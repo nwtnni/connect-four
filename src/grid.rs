@@ -174,7 +174,7 @@ mod tests {
     #[test]
     fn test_single() {
         let mut grid = Grid::new();
-        grid.drop(0, Color::R);
+        grid.drop(0, Color::W);
         println!("{}", grid);
     }
 
@@ -182,7 +182,7 @@ mod tests {
     fn test_column() {
         let mut grid = Grid::new();
         for _ in 0..ROWS {
-            grid.drop(3, Color::Y);
+            grid.drop(3, Color::B);
         }
         println!("{}", grid);
     }
@@ -193,9 +193,9 @@ mod tests {
         for col in 0..COLS {
             for row in 0..ROWS {
                 if (col + row) % 2 == 0 {
-                    grid.drop(col, Color::R);
+                    grid.drop(col, Color::W);
                 } else {
-                    grid.drop(col, Color::Y);
+                    grid.drop(col, Color::B);
                 }
             }
         }
