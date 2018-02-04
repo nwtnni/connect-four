@@ -1,15 +1,21 @@
 use grid::*;
 use minimax::best_move;
 
-pub trait Player {
-    fn take_turn(&self, grid: &Grid, color: Color) -> u8;
-}
+const POSITIVE: [i32; 5] = [0, 1, 4, 9, 10000];
+const NEGATIVE: [i32; 5] = [0, -1, -8, -27, -40000];
 
 pub struct Human {}
 
 pub struct CPU {
-    depth: u8,
-    score: [i32; 10],
+    pub depth: u8,
+    pub positive: [i32; 5],
+    pub negative: [i32; 5],
+}
+
+pub enum Difficulty { Easy, Medium, Hard }
+
+pub trait Player {
+    fn take_turn(&self, grid: &Grid, color: Color) -> u8;
 }
 
 impl Player for Human {
@@ -24,6 +30,17 @@ impl Player for Human {
 
 impl Player for CPU {
     fn take_turn(&self, grid: &Grid, color: Color) -> u8 {
-        best_move(self, grid, color, self.depth) 
+        best_move(self, grid, color, self.depth)
+    }
+}
+
+impl CPU {
+    pub fn new(d: Difficulty) -> Self {
+        let depth = match d {
+            Difficulty::Easy => 2,
+            Difficulty::Medium => 5,
+            Difficulty::Hard => 10,
+        };
+        CPU { depth, positive: POSITIVE, negative: NEGATIVE }
     }
 }

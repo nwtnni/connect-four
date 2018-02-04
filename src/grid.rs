@@ -34,6 +34,7 @@ const RIGHT_DIAGONAL: [(u8, u8); 12] = [
     (2, 0), (2, 1), (2, 2), (2, 3),
 ];
 
+
 #[derive(Clone, Eq, PartialEq)]
 pub struct Grid ([u16; ROWS as usize]);
 
@@ -51,7 +52,54 @@ impl Grid {
         })
     }
 
-    pub fn drop(&mut self, col: u8, color: Color) {
+    pub fn is_winner(&self) -> Option<Color> {
+        for &count in &self.counts() {
+            match count {
+                (4, 0) => return Some(Color::W),
+                (0, 4) => return Some(Color::B),
+                _ => continue,
+            }
+        }
+        None
+    }
+
+    pub fn is_full(&self) -> bool {
+        (0..COLS).all(|col| self.get(ROWS - 1, col) != None)
+    }
+
+    pub fn counts(&self) -> Vec<(usize, usize)> {
+        let &Grid(grid) = self;
+        HORIZONTAL.iter().map(|&(row, col)| {
+            let row = row as usize;
+            Self::count(grid[row] >> col*2)
+        }).chain(
+            VERTICAL.iter().map(|&(row, col)| {
+                let row = row as usize;
+                Self::count((grid[row] & (0b11 << col*2))
+                    + (grid[row + 1] & (0b11 << col*2))
+                    + (grid[row + 2] & (0b11 << col*2))
+                    + (grid[row + 3] & (0b11 << col*2)))
+            })
+        ).chain(
+            LEFT_DIAGONAL.iter().map(|&(row, col)| {
+                let row = row as usize;
+                Self::count((grid[row] & (0b11 << col*2))
+                    + (grid[row - 1] & (0b11 << col*2 + 2))
+                    + (grid[row - 2] & (0b11 << col*2 + 4))
+                    + (grid[row - 3] & (0b11 << col*2 + 6)))
+            })
+        ).chain(
+            RIGHT_DIAGONAL.iter().map(|&(row, col)| {
+                let row = row as usize;
+                Self::count((grid[row] & (0b11 << col*2))
+                    + (grid[row + 1] & (0b11 << col*2 + 2))
+                    + (grid[row + 2] & (0b11 << col*2 + 4))
+                    + (grid[row + 3] & (0b11 << col*2 + 6)))
+            })
+        ).collect()
+    }
+
+    fn drop(&mut self, col: u8, color: Color) {
         for row in 0..ROWS {
             if let None = self.get(row, col) {
                 self.set(row, col, color);
@@ -60,40 +108,7 @@ impl Grid {
         }
     }
 
-    pub fn horizontal(&self, row: u8, col: u8) -> (i32, i32) {
-        let &Grid(grid) = self;
-        let row = row as usize;
-        Self::count(grid[row] >> col*2)
-    }
-
-    pub fn vertical(&self, row: u8, col: u8) -> (i32, i32) {
-        let &Grid(grid) = self;
-        let row = row as usize;
-        Self::count((grid[row] & (0b11 << col*2))
-              + (grid[row + 1] & (0b11 << col*2))
-              + (grid[row + 2] & (0b11 << col*2))
-              + (grid[row + 3] & (0b11 << col*2)))
-    }
-
-    pub fn left_diagonal(&self, row: u8, col: u8) -> (i32, i32) {
-        let &Grid(grid) = self;
-        let row = row as usize;
-        Self::count((grid[row] & (0b11 << col*2))
-              + (grid[row - 1] & (0b11 << col*2 + 2))
-              + (grid[row - 2] & (0b11 << col*2 + 4))
-              + (grid[row - 3] & (0b11 << col*2 + 6)))
-    }
-
-    pub fn right_diagonal(&self, row: u8, col: u8) -> (i32, i32) {
-        let &Grid(grid) = self;
-        let row = row as usize;
-        Self::count((grid[row] & (0b11 << col*2))
-              + (grid[row + 1] & (0b11 << col*2 + 2))
-              + (grid[row + 2] & (0b11 << col*2 + 4))
-              + (grid[row + 3] & (0b11 << col*2 + 6)))
-    }
-
-    pub fn get(&self, row: u8, col: u8) -> Option<Color> {
+    fn get(&self, row: u8, col: u8) -> Option<Color> {
         let &Grid(grid) = self;
         let row = row as usize;
         match (grid[row] >> col*2) & 0b11 {
@@ -104,9 +119,9 @@ impl Grid {
         }
     }
 
-    fn count(pieces: u16) -> (i32, i32) {
-        let w = (pieces & 0b01010101).count_ones() as i32;
-        let b = (pieces & 0b10101010).count_ones() as i32;
+    fn count(pieces: u16) -> (usize, usize) {
+        let w = (pieces & 0b01010101).count_ones() as usize;
+        let b = (pieces & 0b10101010).count_ones() as usize;
         if w > 0 && b > 0 { (0, 0) } else { (w, b) }
     }
 

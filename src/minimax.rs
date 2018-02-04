@@ -27,8 +27,19 @@ pub trait Scorer {
 
 impl Scorer for CPU {
     fn score(&self, state: &State, color: Color) -> i32 {
-        0
-
+        let mut score = 0;
+        if color == Color::W {
+            for &(w, b) in &state.grid.counts() {
+                score += self.positive[w];
+                score += self.negative[b];
+            }
+        } else {
+            for &(w, b) in &state.grid.counts() {
+                score += self.positive[b];
+                score += self.negative[w];
+            }
+        }
+        score
     }
 }
 
