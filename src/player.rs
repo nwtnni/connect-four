@@ -2,7 +2,7 @@ use grid::*;
 use minimax::best_move;
 
 const POSITIVE: [i32; 5] = [0, 1, 4, 9, 10000];
-const NEGATIVE: [i32; 5] = [0, -1, -8, -27, -40000];
+const NEGATIVE: [i32; 5] = [0, -1, -8, -27, -1000000];
 
 pub struct Human {}
 
@@ -39,7 +39,7 @@ impl CPU {
         let depth = match d {
             Difficulty::Easy => 2,
             Difficulty::Medium => 5,
-            Difficulty::Hard => 10,
+            Difficulty::Hard => 11,
         };
         CPU { depth, positive: POSITIVE, negative: NEGATIVE }
     }

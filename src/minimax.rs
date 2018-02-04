@@ -70,7 +70,7 @@ fn minimax<S: Scorer>(scorer: &S, state: &State, color: Color, depth: u8, alpha:
             if score > max { max = score }
             if beta <= alpha { break }
         }
-        max
+        if max == MIN { scorer.score(state, color) } else { max }
     } else {
         let mut beta = beta;
         let mut min = MAX;
@@ -80,6 +80,6 @@ fn minimax<S: Scorer>(scorer: &S, state: &State, color: Color, depth: u8, alpha:
             if score < min { min = score }
             if beta <= alpha { break }
         }
-        min
+        if min == MAX { scorer.score(state, color) } else { min }
     }
 }

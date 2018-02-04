@@ -45,11 +45,11 @@ impl Grid {
     pub fn new() -> Self { Grid([0; ROWS as usize]) }
 
     pub fn next(&self, col: u8, color: Color) -> Option<Grid> {
-        self.get(ROWS - 1, col).map(|_| {
+        if let None = self.get(ROWS - 1, col) {
             let mut grid = self.clone();
             grid.drop(col, color);
-            grid
-        })
+            Some(grid)
+        } else { None }
     }
 
     pub fn is_winner(&self) -> Option<Color> {
@@ -75,26 +75,35 @@ impl Grid {
         }).chain(
             VERTICAL.iter().map(|&(row, col)| {
                 let row = row as usize;
-                Self::count((grid[row] & (0b11 << col*2))
-                    + (grid[row + 1] & (0b11 << col*2))
-                    + (grid[row + 2] & (0b11 << col*2))
-                    + (grid[row + 3] & (0b11 << col*2)))
+                let shift = col*2;
+                Self::count(
+                    ((grid[row    ] >> shift) & 0b11)
+                  + (((grid[row + 1] >> shift) & 0b11) << 2)
+                  + (((grid[row + 2] >> shift) & 0b11) << 4)
+                  + (((grid[row + 3] >> shift) & 0b11) << 6)
+                )
             })
         ).chain(
             LEFT_DIAGONAL.iter().map(|&(row, col)| {
                 let row = row as usize;
-                Self::count((grid[row] & (0b11 << col*2))
-                    + (grid[row - 1] & (0b11 << col*2 + 2))
-                    + (grid[row - 2] & (0b11 << col*2 + 4))
-                    + (grid[row - 3] & (0b11 << col*2 + 6)))
+                let shift = col*2;
+                Self::count(
+                    ((grid[row    ] >> shift) & 0b00000011)
+                  + ((grid[row - 1] >> shift) & 0b00001100)
+                  + ((grid[row - 2] >> shift) & 0b00110000)
+                  + ((grid[row - 3] >> shift) & 0b11000000)
+                )
             })
         ).chain(
             RIGHT_DIAGONAL.iter().map(|&(row, col)| {
                 let row = row as usize;
-                Self::count((grid[row] & (0b11 << col*2))
-                    + (grid[row + 1] & (0b11 << col*2 + 2))
-                    + (grid[row + 2] & (0b11 << col*2 + 4))
-                    + (grid[row + 3] & (0b11 << col*2 + 6)))
+                let shift = col*2;
+                Self::count(
+                    ((grid[row    ] >> shift) & 0b00000011)
+                  + ((grid[row + 1] >> shift) & 0b00001100)
+                  + ((grid[row + 2] >> shift) & 0b00110000)
+                  + ((grid[row + 3] >> shift) & 0b11000000)
+                )
             })
         ).collect()
     }
@@ -122,6 +131,7 @@ impl Grid {
     fn count(pieces: u16) -> (usize, usize) {
         let w = (pieces & 0b01010101).count_ones() as usize;
         let b = (pieces & 0b10101010).count_ones() as usize;
+        if w > 4 || b > 4 { println!("{:b}", pieces); }
         if w > 0 && b > 0 { (0, 0) } else { (w, b) }
     }
 
@@ -150,9 +160,9 @@ impl Grid {
 
 impl fmt::Display for Grid {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "-")?;
-        for _ in 0..COLS { write!(f, "--------")?; }
         for row in 0..ROWS {
+            write!(f, "\n-")?;
+            for _ in 0..COLS { write!(f, "--------")?; }
 
             write!(f, "\n|")?;
             for _ in 0..COLS { write!(f, "       |")?; }
@@ -168,11 +178,19 @@ impl fmt::Display for Grid {
 
             write!(f, "\n|")?;
             for _ in 0..COLS { write!(f, "       |")?; }
-
-            write!(f, "\n-")?;
-            for _ in 0..COLS { write!(f, "--------")?; }
         }
+        write!(f, "\n-")?;
+        for col in 0..COLS { write!(f, "--- {}---", col)?; }
         Ok(())
+    }
+}
+
+impl fmt::Display for Color {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        match self {
+            &Color::W => write!(f, "White"),
+            &Color::B => write!(f, "Black"),
+        }
     }
 }
 

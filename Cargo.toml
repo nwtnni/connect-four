@@ -3,5 +3,9 @@ name = "connect-four"
 version = "0.1.0"
 authors = ["Newton Ni <nwtnni@gmail.com>"]
 
+[lib]
+name = "minimax"
+path = "src/lib.rs"
+
 [dependencies]
 text_io = "0.1.7"
