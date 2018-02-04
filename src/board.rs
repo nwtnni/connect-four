@@ -56,6 +56,10 @@ impl Board {
         }
         false
     }
+
+    pub fn current(&self) -> u8 {
+        self.turn & 1 
+    }
 }
 
 impl fmt::Display for Board {
