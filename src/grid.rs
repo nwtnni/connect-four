@@ -35,10 +35,10 @@ const RIGHT_DIAGONAL: [(u8, u8); 12] = [
 ];
 
 
-#[derive(Clone, Eq, PartialEq)]
+#[derive(Clone, Eq, PartialEq, Hash)]
 pub struct Grid ([u16; ROWS as usize]);
 
-#[derive(Copy, Clone, Eq, PartialEq)]
+#[derive(Copy, Clone, Eq, PartialEq, Hash)]
 pub enum Color { W, B }
 
 impl Grid {

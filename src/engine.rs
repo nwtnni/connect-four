@@ -1,5 +1,27 @@
 use grid::*;
-use player::*;
+use minimax::*;
+
+pub struct Human {}
+
+pub trait Player {
+    fn take_turn(&mut self, grid: &Grid, color: Color) -> u8;
+}
+
+impl Player for Human {
+    fn take_turn(&mut self, grid: &Grid, color: Color) -> u8 {
+        let mut col: u8 = read!();
+        while let None = grid.next(col, color) {
+            col = read!();
+        }
+        col
+    }
+}
+
+impl Player for AI {
+    fn take_turn(&mut self, grid: &Grid, color: Color) -> u8 {
+        self.best_move(grid, color)
+    }
+}
 
 pub struct Engine<P1: Player, P2: Player> {
     grid: Grid,
@@ -17,21 +39,21 @@ pub fn human_vs_human() -> Engine<Human, Human> {
     }
 }
 
-pub fn human_vs_cpu(d: u8) -> Engine<Human, CPU> {
+pub fn human_vs_ai(t: u64) -> Engine<Human, AI> {
     Engine {
         grid: Grid::new(),
         color: Color::W,
         player_one: Human {},
-        player_two: CPU::new(d),
+        player_two: AI::new(t),
     }
 }
 
-pub fn cpu_vs_cpu(d1: u8, d2: u8) -> Engine<CPU, CPU> {
+pub fn ai_vs_ai(t1: u64, t2: u64) -> Engine<AI, AI> {
     Engine {
         grid: Grid::new(),
         color: Color::W,
-        player_one: CPU::new(d1),
-        player_two: CPU::new(d2),
+        player_one: AI::new(t1),
+        player_two: AI::new(t2),
     }
 }
 
@@ -47,13 +69,11 @@ impl<P1: Player, P2: Player> Engine<P1, P2> {
                 break
             } else if self.color == Color::W {
                 let col = self.player_one.take_turn(&self.grid, self.color);
-                self.player_one.wait();
                 println!("\nPlayer one played column {}!", col);
                 self.grid = self.grid.next(col, self.color).expect("Invalid move by P1");
                 self.color = Color::B;
             } else {
                 let col = self.player_two.take_turn(&self.grid, self.color);
-                self.player_two.wait();
                 println!("\nPlayer two played column {}!", col);
                 self.grid = self.grid.next(col, self.color).expect("Invalid move by P2");
                 self.color = Color::W;

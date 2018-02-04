@@ -9,3 +9,4 @@ path = "src/lib.rs"
 
 [dependencies]
 text_io = "0.1.7"
+fnv = "1.0.6"
