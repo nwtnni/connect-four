@@ -1,3 +1,4 @@
+use std::io;
 use grid::*;
 use minimax::best_move;
 
@@ -12,10 +13,9 @@ pub struct CPU {
     pub negative: [i32; 5],
 }
 
-pub enum Difficulty { Easy, Medium, Hard }
-
 pub trait Player {
     fn take_turn(&self, grid: &Grid, color: Color) -> u8;
+    fn wait(&self);
 }
 
 impl Player for Human {
@@ -26,21 +26,23 @@ impl Player for Human {
         }
         col
     }
+
+    fn wait(&self) {}
 }
 
 impl Player for CPU {
     fn take_turn(&self, grid: &Grid, color: Color) -> u8 {
         best_move(self, grid, color, self.depth)
     }
+
+    fn wait(&self) { 
+        let mut buffer = String::new();
+        io::stdin().read_line(&mut buffer).expect("Error in user prompt");
+    }
 }
 
 impl CPU {
-    pub fn new(d: Difficulty) -> Self {
-        let depth = match d {
-            Difficulty::Easy => 2,
-            Difficulty::Medium => 5,
-            Difficulty::Hard => 11,
-        };
+    pub fn new(depth: u8) -> Self {
         CPU { depth, positive: POSITIVE, negative: NEGATIVE }
     }
 }
