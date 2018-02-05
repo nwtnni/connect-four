@@ -69,16 +69,18 @@ fn analyze(times: Vec<f64>) -> (f64, f64) {
 }
 
 fn run_test(file: &'static str) {
+    let mut ai = AI::new();
     let mut total = 0;
     let mut correct = 0;
     let mut times = Vec::new();
     for case in parse(file) {
         let start = Instant::now();
-        let guess = AI::negamax(&case.board, MIN, MAX);
+        let guess = ai.negamax(&case.board, -SIZE, SIZE);
         let stop = Instant::now();
         if guess == case.score { correct += 1; }
         times.push(elapsed(stop - start));
         total += 1;
+        ai.reset();
         println!("Current iteration: {}", total);
     }
     let (mean, std) = analyze(times);
@@ -88,12 +90,12 @@ fn run_test(file: &'static str) {
     println!("Standard deviation: {}", std);
 }
 
-#[test]
-fn end_easy() {
-    run_test(END_EASY);
-}
-
 // #[test]
-// fn middle_easy() {
-//     run_test(MIDDLE_EASY);
+// fn end_easy() {
+//     run_test(END_EASY);
 // }
+
+#[test]
+fn middle_easy() {
+    run_test(MIDDLE_MEDIUM);
+}

@@ -51,6 +51,10 @@ impl Board {
         }).collect()
     }
 
+    pub fn key(&self) -> u64 {
+        self.all + self.owned
+    }
+
     pub fn make_move(&mut self, col: u8) {
         self.owned ^= self.all;
         self.all |= self.all + BOT_MASK[col as usize];
