@@ -56,11 +56,17 @@ impl Board {
 
     pub fn safe_moves(&self) -> Vec<&u8> {
         let safe = self.safe();
-        MOVE_ORDER.iter().filter(|&&col| {
+        let mut moves = MOVE_ORDER.iter().filter(|&&col| {
             self.all & TOP_MASK[col as usize] == 0
         }).filter(|&&col| {
             safe & COL_MASK[col as usize] != 0
-        }).collect()
+        }).collect::<Vec<_>>();
+
+        moves.sort_by_key(|&&col| {
+            let moved = safe & COL_MASK[col as usize];
+            self.score_move(moved)
+        });
+        moves
     }
 
     pub fn key(&self) -> u64 {
@@ -77,27 +83,32 @@ impl Board {
         (self.win_positions() & self.possible() & COL_MASK[col as usize]) != 0
     }
 
+    fn score_move(&self, moved: u64) -> i8 {
+        -(Self::get_winning_positions(self.owned | moved, self.all | moved)
+            .count_ones() as i8)
+    }
+
     fn safe(&self) -> u64 {
-        let mut possible = self.possible(); 
+        let mut possible = self.possible();
         let opponent = self.opponent_win();
         let forced = possible & opponent;
-        
+
         if forced != 0 {
             if forced & (forced - 1) != 0 {
-                return 0 
+                return 0
             } else {
-                possible = forced; 
+                possible = forced;
             }
         }
         possible & !(opponent >> 1)
     }
 
     fn win_positions(&self) -> u64 {
-        Self::get_winning_positions(self.owned, self.all) 
+        Self::get_winning_positions(self.owned, self.all)
     }
 
     fn opponent_win(&self) -> u64 {
-        Self::get_winning_positions(self.owned ^ self.all, self.all) 
+        Self::get_winning_positions(self.owned ^ self.all, self.all)
     }
 
     fn possible(&self) -> u64 {

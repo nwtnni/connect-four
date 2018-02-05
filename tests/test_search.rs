@@ -81,7 +81,6 @@ fn run_test(file: &'static str) {
         times.push(elapsed(stop - start));
         total += 1;
         ai.reset();
-        println!("Current iteration: {}", total);
     }
     let (mean, std) = analyze(times);
     println!("Statistics for {}", file);
@@ -95,7 +94,17 @@ fn end_easy() {
     run_test(END_EASY);
 }
 
-// #[test]
-// fn middle_easy() {
-//     run_test(MIDDLE_EASY);
-// }
+#[test]
+fn middle_easy() {
+    run_test(MIDDLE_EASY);
+}
+
+#[test]
+fn middle_medium() {
+    run_test(MIDDLE_MEDIUM);
+}
+
+#[test]
+fn begin_easy() {
+    run_test(BEGIN_EASY);
+}
