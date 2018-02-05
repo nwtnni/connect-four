@@ -28,9 +28,20 @@ impl AI {
 
             let score = self.negamax(board, mid, mid + 1);
             if score <= mid { max = score }
-            else { min = score } 
+            else { min = score }
         }
         min
+    }
+
+    pub fn mtdf(&mut self, board: &Board) -> i8 {
+        let mut score = 0;
+        let (mut lower, mut upper) = (-SIZE, SIZE);
+        while lower < upper {
+            let beta = if score == lower { score + 1 } else { score };
+            score = self.negamax(board, beta - 1, beta);
+            if score < beta { upper = score } else { lower = score }
+        }
+        return score
     }
 
     pub fn negamax(&mut self, board: &Board, mut alpha: i8, mut beta: i8) -> i8 {

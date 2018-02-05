@@ -14,6 +14,9 @@ const MIDDLE_MEDIUM: &'static str = "middle-medium.txt";
 const BEGIN_MEDIUM: &'static str = "begin-medium.txt";
 const BEGIN_HARD: &'static str = "begin-hard.txt";
 
+#[derive(Copy, Clone, Debug)]
+enum Search { Null, MTD }
+
 struct Case {
     board: Board,
     score: i8,
@@ -68,14 +71,17 @@ fn analyze(times: Vec<f64>) -> (f64, f64) {
     (mean, std)
 }
 
-fn run_test(file: &'static str) {
+fn run_test(file: &'static str, search: Search) {
     let mut ai = AI::new();
     let mut total = 0;
     let mut correct = 0;
     let mut times = Vec::new();
     for case in parse(file) {
         let start = Instant::now();
-        let guess = ai.null_window(&case.board);
+        let guess = match search {
+            Search::Null => ai.null_window(&case.board),
+            Search::MTD => ai.mtdf(&case.board),
+        };
         let stop = Instant::now();
         if guess == case.score { correct += 1; }
         times.push(elapsed(stop - start));
@@ -83,28 +89,48 @@ fn run_test(file: &'static str) {
         ai.reset();
     }
     let (mean, std) = analyze(times);
-    println!("Statistics for {}", file);
+    println!("Statistics for {}, {:?}", file, search);
     println!("Correctness: {}/{}", correct, total);
     println!("Mean search time: {}", mean);
     println!("Standard deviation: {}", std);
 }
 
+// #[test]
+// fn end_easy_null() {
+//     run_test(END_EASY, Search::Null);
+// }
+
+// #[test]
+// fn end_easy_mtd() {
+//     run_test(END_EASY, Search::MTD);
+// }
+
+// #[test]
+// fn middle_easy_null() {
+//     run_test(MIDDLE_EASY, Search::Null);
+// }
+
+// #[test]
+// fn middle_easy_mtd() {
+//     run_test(MIDDLE_EASY, Search::MTD);
+// }
+
 #[test]
-fn end_easy() {
-    run_test(END_EASY);
+fn middle_medium_null() {
+    run_test(MIDDLE_MEDIUM, Search::Null);
 }
 
-// #[test]
-// fn middle_easy() {
-//     run_test(MIDDLE_EASY);
-// }
+#[test]
+fn middle_medium_mtd() {
+    run_test(MIDDLE_MEDIUM, Search::MTD);
+}
 
-// #[test]
-// fn middle_medium() {
-//     run_test(MIDDLE_MEDIUM);
-// }
+#[test]
+fn begin_easy_null() {
+    run_test(BEGIN_EASY, Search::Null);
+}
 
-// #[test]
-// fn begin_easy() {
-//     run_test(BEGIN_EASY);
-// }
+#[test]
+fn begin_easy_mtd() {
+    run_test(BEGIN_EASY, Search::MTD);
+}
