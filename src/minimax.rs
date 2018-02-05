@@ -10,14 +10,18 @@ impl AI {
         let moves = board.valid_moves();
         if moves.len() == 0 { return 0 }
 
-        let max = (MAX + 1 - board.moves) / 2;
+        for &&col in &moves {
+            if board.will_win(col) {
+                return (MAX + 1 - board.moves)/2
+            }
+        }
+
+        let max = (MAX - 1 - board.moves) / 2;
         if beta > max { beta = max }
         if alpha >= beta { return beta }
 
         for &col in moves {
             let mut next = board.clone();
-            if next.will_win(col) { return max }
-
             next.make_move(col);
             let score = -Self::negamax(&next, -beta, -alpha);
 
