@@ -34,8 +34,9 @@ impl AI {
     }
 
     pub fn negamax(&mut self, board: &Board, mut alpha: i8, mut beta: i8) -> i8 {
-        let moves = board.valid_moves();
-        if moves.len() == 0 { return 0 }
+        let moves = board.safe_moves();
+        if moves.len() == 0 { return -(SIZE - board.moves)/2 }
+        if board.moves >= SIZE - 2 { return 0 }
 
         for &&col in &moves {
             if board.will_win(col) {

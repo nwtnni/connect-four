@@ -90,12 +90,12 @@ fn run_test(file: &'static str) {
     println!("Standard deviation: {}", std);
 }
 
-// #[test]
-// fn end_easy() {
-//     run_test(END_EASY);
-// }
-
 #[test]
-fn middle_easy() {
-    run_test(BEGIN_EASY);
+fn end_easy() {
+    run_test(END_EASY);
 }
+
+// #[test]
+// fn middle_easy() {
+//     run_test(MIDDLE_EASY);
+// }
