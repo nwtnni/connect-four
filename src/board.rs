@@ -6,7 +6,8 @@ pub const WHITE: i8 = 0b1;
 pub const BLACK: i8 = 0b0;
 
 const DIRECTIONS: [u8; 4] = [1, 6, 7, 8];
-const MAX_HEIGHT: u64 = 0x80808080;
+const MAX_HEIGHT: u64 = 0b1000000_1000000_1000000_1000000_1000000_1000000_1000000;
+
 const HEIGHT: [u8; COLS as usize] = [
     0, 7, 14, 21, 28, 35, 42
 ];
@@ -28,7 +29,7 @@ impl Board {
 
     pub fn valid_moves(&self) -> Vec<u8> {
         (0..COLS).filter(|&col| {
-          MAX_HEIGHT & (1 << self.height[col as usize]) as u64 == 0
+          MAX_HEIGHT & (1 << self.height[col as usize] as u64) == 0
         }).collect()
     }
 
