@@ -76,17 +76,16 @@ fn run_test(file: &'static str, search: Search) {
     let mut total = 0;
     let mut correct = 0;
     let mut times = Vec::new();
-    for case in parse(file) {
+    for mut case in parse(file) {
         let start = Instant::now();
         let guess = match search {
-            Search::Null => ai.null_window(&case.board),
-            Search::MTD => ai.mtdf(&case.board),
+            Search::Null => ai.null_window(&mut case.board),
+            Search::MTD => ai.mtdf(&mut case.board),
         };
         let stop = Instant::now();
         if guess == case.score { correct += 1; }
         times.push(elapsed(stop - start));
         total += 1;
-        ai.reset();
     }
     let (mean, std) = analyze(times);
     println!("Statistics for {}, {:?}", file, search);
@@ -95,25 +94,25 @@ fn run_test(file: &'static str, search: Search) {
     println!("Standard deviation: {}", std);
 }
 
-// #[test]
-// fn end_easy_null() {
-//     run_test(END_EASY, Search::Null);
-// }
+#[test]
+fn end_easy_null() {
+    run_test(END_EASY, Search::Null);
+}
 
-// #[test]
-// fn end_easy_mtd() {
-//     run_test(END_EASY, Search::MTD);
-// }
+#[test]
+fn end_easy_mtd() {
+    run_test(END_EASY, Search::MTD);
+}
 
-// #[test]
-// fn middle_easy_null() {
-//     run_test(MIDDLE_EASY, Search::Null);
-// }
+#[test]
+fn middle_easy_null() {
+    run_test(MIDDLE_EASY, Search::Null);
+}
 
-// #[test]
-// fn middle_easy_mtd() {
-//     run_test(MIDDLE_EASY, Search::MTD);
-// }
+#[test]
+fn middle_easy_mtd() {
+    run_test(MIDDLE_EASY, Search::MTD);
+}
 
 #[test]
 fn middle_medium_null() {

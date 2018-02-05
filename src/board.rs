@@ -54,15 +54,15 @@ impl Board {
         }).collect()
     }
 
-    pub fn safe_moves(&self) -> Vec<&u8> {
+    pub fn safe_moves(&self) -> Vec<u8> {
         let safe = self.safe();
         let mut moves = MOVE_ORDER.iter().filter(|&&col| {
             self.all & TOP_MASK[col as usize] == 0
         }).filter(|&&col| {
             safe & COL_MASK[col as usize] != 0
-        }).collect::<Vec<_>>();
+        }).cloned().collect::<Vec<_>>();
 
-        moves.sort_by_key(|&&col| {
+        moves.sort_by_key(|&col| {
             let moved = safe & COL_MASK[col as usize];
             self.score_move(moved)
         });
@@ -77,6 +77,12 @@ impl Board {
         self.owned ^= self.all;
         self.all |= self.all + BOT_MASK[col as usize];
         self.moves += 1;
+    }
+
+    pub fn undo_move(&mut self, col: u8) {
+        self.moves -= 1;
+        self.all ^= ((self.all & COL_MASK[col as usize]) + BOT_MASK[col as usize]) >> 1;
+        self.owned ^= self.all;
     }
 
     pub fn will_win(&self, col: u8) -> bool {

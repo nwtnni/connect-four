@@ -18,7 +18,7 @@ impl AI {
         self.table.reset()
     }
 
-    pub fn null_window(&mut self, board: &Board) -> i8 {
+    pub fn null_window(&mut self, board: &mut Board) -> i8 {
         let mut min = -(SIZE - board.moves)/2;
         let mut max = (SIZE+1 - board.moves)/2;
         while min < max {
@@ -33,7 +33,7 @@ impl AI {
         min
     }
 
-    pub fn mtdf(&mut self, board: &Board) -> i8 {
+    pub fn mtdf(&mut self, board: &mut Board) -> i8 {
         let mut score = 0;
         let (mut lower, mut upper) = (-SIZE, SIZE);
         while lower < upper {
@@ -44,12 +44,12 @@ impl AI {
         return score
     }
 
-    pub fn negamax(&mut self, board: &Board, mut alpha: i8, mut beta: i8) -> i8 {
+    pub fn negamax(&mut self, board: &mut Board, mut alpha: i8, mut beta: i8) -> i8 {
         let moves = board.safe_moves();
         if moves.len() == 0 { return -(SIZE - board.moves)/2 }
         if board.moves >= SIZE - 2 { return 0 }
 
-        for &&col in &moves {
+        for &col in &moves {
             if board.will_win(col) {
                 return (SIZE + 1 - board.moves)/2
             }
@@ -64,10 +64,10 @@ impl AI {
         if beta > max { beta = max }
         if alpha >= beta { return beta }
 
-        for &col in moves {
-            let mut next = board.clone();
-            next.make_move(col);
-            let score = -self.negamax(&next, -beta, -alpha);
+        for col in moves {
+            board.make_move(col);
+            let score = -self.negamax(board, -beta, -alpha);
+            board.undo_move(col);
 
             if score >= beta { return score }
             if score > alpha { alpha = score }
