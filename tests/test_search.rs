@@ -79,6 +79,9 @@ fn run_test(file: &'static str) {
         if guess == case.score { correct += 1; }
         times.push(elapsed(stop - start));
         total += 1;
+        if total % 25 == 0 {
+            println!("Current iteration: {}", total);
+        }
     }
     let (mean, std) = analyze(times);
     println!("Statistics for {}", file);
@@ -91,3 +94,8 @@ fn run_test(file: &'static str) {
 fn end_easy() {
     run_test(END_EASY);
 }
+
+// #[test]
+// fn middle_easy() {
+//     run_test(MIDDLE_EASY);
+// }
