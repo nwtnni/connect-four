@@ -94,17 +94,17 @@ fn end_easy() {
     run_test(END_EASY);
 }
 
-#[test]
-fn middle_easy() {
-    run_test(MIDDLE_EASY);
-}
+// #[test]
+// fn middle_easy() {
+//     run_test(MIDDLE_EASY);
+// }
 
-#[test]
-fn middle_medium() {
-    run_test(MIDDLE_MEDIUM);
-}
+// #[test]
+// fn middle_medium() {
+//     run_test(MIDDLE_MEDIUM);
+// }
 
-#[test]
-fn begin_easy() {
-    run_test(BEGIN_EASY);
-}
+// #[test]
+// fn begin_easy() {
+//     run_test(BEGIN_EASY);
+// }

@@ -2,7 +2,7 @@ const TABLE_SIZE: usize = 8388593;
 
 #[derive(Copy, Clone)]
 struct Entry {
-    key: u64,
+    key: u32,
     bound: i8,
 }
 
@@ -15,8 +15,8 @@ impl Table {
 
     pub fn reset(&mut self) {
         for entry in self.map.iter_mut() {
-            entry.key = 0; 
-        } 
+            entry.key = 0;
+        }
     }
 
     pub fn index(key: u64) -> usize {
@@ -25,12 +25,12 @@ impl Table {
 
     pub fn insert(&mut self, key: u64, bound: i8) {
         let entry = &mut self.map[Self::index(key)];
-        entry.key = key;
+        entry.key = key as u32;
         entry.bound = bound;
     }
 
     pub fn get(&self, key: u64) -> Option<i8> {
         let entry = self.map[Self::index(key)];
-        if entry.key == key { Some(entry.bound) } else { None }
+        if entry.key == key as u32 { Some(entry.bound) } else { None }
     }
 }
