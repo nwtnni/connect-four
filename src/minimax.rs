@@ -3,7 +3,6 @@ use table::*;
 
 pub const SIZE: i8 = (ROWS*COLS) as i8;
 pub const MIN: i8 = -SIZE/2 + 3;
-pub const MAX: i8 = (SIZE+1)/2 - 3;
 
 pub struct AI {
     table: Table,
@@ -16,6 +15,19 @@ impl AI {
 
     pub fn reset(&mut self) {
         self.table.reset()
+    }
+
+    pub fn solve(&mut self, board: &mut Board) -> u8 {
+        let safe = board.safe_moves();
+        let (mut best_score, mut best_col) = (SIZE, 3);
+        for &col in &safe {
+            if board.will_win(col) { return col }
+        }
+        for &col in &safe {
+            let score = self.null_window(board);
+            if score < best_score { best_score = score; best_col = col; }
+        }
+        best_col
     }
 
     pub fn null_window(&mut self, board: &mut Board) -> i8 {

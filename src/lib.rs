@@ -2,5 +2,6 @@
 extern crate text_io;
 extern crate fnv;
 pub mod board;
-pub mod table;
-pub mod minimax;
+pub mod engine;
+mod minimax;
+mod table;
