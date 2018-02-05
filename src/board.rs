@@ -1,15 +1,36 @@
-use std::fmt;
-
 pub const ROWS: u8 = 6;
 pub const COLS: u8 = 7;
 pub const WHITE: i8 = 0b1;
 pub const BLACK: i8 = 0b0;
 
-const DIRECTIONS: [u8; 4] = [1, 6, 7, 8];
-const MAX_HEIGHT: u64 = 0b1000000_1000000_1000000_1000000_1000000_1000000_1000000;
+const TOP_MASK: [u64; 7] = [
+    0b0000000_0000000_0000000_0000000_0000000_0000000_0100000,
+    0b0000000_0000000_0000000_0000000_0000000_0100000_0000000,
+    0b0000000_0000000_0000000_0000000_0100000_0000000_0000000,
+    0b0000000_0000000_0000000_0100000_0000000_0000000_0000000,
+    0b0000000_0000000_0100000_0000000_0000000_0000000_0000000,
+    0b0000000_0100000_0000000_0000000_0000000_0000000_0000000,
+    0b0100000_0000000_0000000_0000000_0000000_0000000_0000000,
+];
 
-const HEIGHT: [u8; COLS as usize] = [
-    0, 7, 14, 21, 28, 35, 42
+const BOT_MASK: [u64; 7] = [
+    0b0000000_0000000_0000000_0000000_0000000_0000000_0000001,
+    0b0000000_0000000_0000000_0000000_0000000_0000001_0000000,
+    0b0000000_0000000_0000000_0000000_0000001_0000000_0000000,
+    0b0000000_0000000_0000000_0000001_0000000_0000000_0000000,
+    0b0000000_0000000_0000001_0000000_0000000_0000000_0000000,
+    0b0000000_0000001_0000000_0000000_0000000_0000000_0000000,
+    0b0000001_0000000_0000000_0000000_0000000_0000000_0000000,
+];
+
+const COL_MASK: [u64; 7] = [
+    0b0000000_0000000_0000000_0000000_0000000_0000000_0111111,
+    0b0000000_0000000_0000000_0000000_0000000_0111111_0000000,
+    0b0000000_0000000_0000000_0000000_0111111_0000000_0000000,
+    0b0000000_0000000_0000000_0111111_0000000_0000000_0000000,
+    0b0000000_0000000_0111111_0000000_0000000_0000000_0000000,
+    0b0000000_0111111_0000000_0000000_0000000_0000000_0000000,
+    0b0111111_0000000_0000000_0000000_0000000_0000000_0000000,
 ];
 
 const MOVE_ORDER: [u8; 7] = [3, 2, 4, 1, 5, 0, 6];
@@ -17,77 +38,44 @@ const MOVE_ORDER: [u8; 7] = [3, 2, 4, 1, 5, 0, 6];
 #[derive(Clone, Eq, PartialEq, Hash)]
 pub struct Board {
     pub moves: i8,
-    height: [u8; COLS as usize],
-    board: [u64; 2],
+    pub owned: u64,
+    pub all: u64,
 }
 
 impl Board {
-    pub fn new() -> Self {
-        let moves = 0;
-        let height = HEIGHT.clone();
-        let board = [0, 0];
-        Board { moves, height, board }
-    }
+    pub fn new() -> Self { Board { moves: 0, owned: 0, all: 0 } }
 
     pub fn valid_moves(&self) -> Vec<&u8> {
         MOVE_ORDER.iter().filter(|&&col| {
-          MAX_HEIGHT & (1 << self.height[col as usize] as u64) == 0
+            self.all & TOP_MASK[col as usize] == 0
         }).collect()
     }
 
-    pub fn mutate(&mut self, col: u8) {
-        self.board[(self.moves & 1) as usize] ^= 1 << self.height[col as usize];
-        self.height[col as usize] += 1;
+    pub fn make_move(&mut self, col: u8) {
+        self.owned ^= self.all;
+        self.all |= self.all + BOT_MASK[col as usize];
         self.moves += 1;
     }
 
-    pub fn after_move(&self, col: u8) -> Self {
-        let Board { mut moves, mut height, mut board } = self.clone();
-        board[(moves & 1) as usize] ^= 1 << height[col as usize];
-        height[col as usize] += 1;
-        moves += 1;
-        Board { moves, height, board }
+    pub fn will_win(&self, col: u8) -> bool {
+        let col = col as usize;
+        let owned = self.owned | ((self.all + BOT_MASK[col]) & COL_MASK[col]);
+        Self::is_won(owned)
     }
 
-    pub fn before_move(&self, col: u8) -> Self {
-        let Board { mut moves, mut height, mut board } = self.clone();
-        moves -= 1;
-        height[col as usize] -= 1;
-        board[(moves & 1) as usize] ^= 1 << height[col as usize];
-        Board { moves, height, board }
-    }
+    pub fn is_won(owned: u64) -> bool {
+        let l = owned & (owned >> 6);
+        if l & (l >> 12) != 0 { return true }
 
-    pub fn is_win(&self) -> bool {
-        let board = self.board[(!self.moves & 1) as usize];
-        for &direction in &DIRECTIONS {
-            let half = board & (board >> direction);
-            if half & (half >> direction*2) != 0 { return true }
-        }
+        let r = owned & (owned >> 8);
+        if r & (r >> 16) != 0 { return true }
+
+        let h = owned & (owned >> 7);
+        if h & (h >> 14) != 0 { return true }
+
+        let v = owned & (owned >> 1);
+        if v & (v >> 2) != 0 { return true }
+
         false
-    }
-
-    pub fn current_player(&self) -> i8 {
-        self.moves & 1
-    }
-}
-
-impl fmt::Display for Board {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        for row in (0..ROWS).rev() {
-            let mut bit = row;
-            while bit < (ROWS + 1)*COLS {
-                let mask = (1 << bit) as u64;
-                if self.board[0] != 0 {
-                    write!(f, " W");
-                } else if self.board[1] != 0 {
-                    write!(f, " B");
-                } else {
-                    write!(f, " .");
-                };
-                bit += ROWS + 1;
-            }
-            write!(f, "\n");
-        }
-        Ok(())
     }
 }

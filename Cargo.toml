@@ -7,14 +7,6 @@ authors = ["Newton Ni <nwtnni@gmail.com>"]
 name = "minimax"
 path = "src/lib.rs"
 
-[profile.test]
-opt-level = 3
-debug = false
-rpath = false
-lto = false
-debug-assertions = false
-codegen-units = 1
-
 [dependencies]
 text_io = "0.1.7"
 fnv = "1.0.6"
