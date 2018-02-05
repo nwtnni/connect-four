@@ -14,7 +14,7 @@ impl AI {
         if beta > max { beta = max }
         if alpha >= beta { return beta }
 
-        for col in moves {
+        for &col in moves {
             let next = board.after_move(col);
             if next.is_win() { return max }
             let score = -Self::negamax(&next, -beta, -alpha);

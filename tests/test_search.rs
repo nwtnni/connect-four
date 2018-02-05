@@ -28,7 +28,7 @@ impl Parse for Board {
         let mut board = Board::new();
         for c in moves.chars() {
             let c = (char::to_digit(c, 10).unwrap() - 1) as u8;
-            board = board.after_move(c);
+            board.mutate(c);
         }
         board
     }
@@ -79,9 +79,7 @@ fn run_test(file: &'static str) {
         if guess == case.score { correct += 1; }
         times.push(elapsed(stop - start));
         total += 1;
-        if total % 25 == 0 {
-            println!("Current iteration: {}", total);
-        }
+        println!("Current iteration: {}", total);
     }
     let (mean, std) = analyze(times);
     println!("Statistics for {}", file);

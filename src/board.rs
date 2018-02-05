@@ -12,6 +12,8 @@ const HEIGHT: [u8; COLS as usize] = [
     0, 7, 14, 21, 28, 35, 42
 ];
 
+const MOVE_ORDER: [u8; 7] = [3, 2, 4, 1, 5, 0, 6];
+
 #[derive(Clone, Eq, PartialEq, Hash)]
 pub struct Board {
     pub moves: i8,
@@ -27,10 +29,16 @@ impl Board {
         Board { moves, height, board }
     }
 
-    pub fn valid_moves(&self) -> Vec<u8> {
-        (0..COLS).filter(|&col| {
+    pub fn valid_moves(&self) -> Vec<&u8> {
+        MOVE_ORDER.iter().filter(|&&col| {
           MAX_HEIGHT & (1 << self.height[col as usize] as u64) == 0
         }).collect()
+    }
+
+    pub fn mutate(&mut self, col: u8) {
+        self.board[(self.moves & 1) as usize] ^= 1 << self.height[col as usize];
+        self.height[col as usize] += 1;
+        self.moves += 1;
     }
 
     pub fn after_move(&self, col: u8) -> Self {
