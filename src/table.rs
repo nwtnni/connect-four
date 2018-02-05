@@ -24,7 +24,7 @@ impl Table {
     }
 
     pub fn insert(&mut self, key: u64, bound: i8) {
-        let mut entry = &mut self.map[Self::index(key)];
+        let entry = &mut self.map[Self::index(key)];
         entry.key = key;
         entry.bound = bound;
     }

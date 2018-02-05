@@ -18,6 +18,21 @@ impl AI {
         self.table.reset()
     }
 
+    pub fn null_window(&mut self, board: &Board) -> i8 {
+        let mut min = -(SIZE - board.moves)/2;
+        let mut max = (SIZE+1 - board.moves)/2;
+        while min < max {
+            let mut mid = min + (max - min)/2;
+            if mid <= 0 && min/2 < mid { mid = min/2 }
+            else if mid >= 0 && max/2 > mid { mid = max/2 }
+
+            let score = self.negamax(board, mid, mid + 1);
+            if score <= mid { max = score }
+            else { min = score } 
+        }
+        min
+    }
+
     pub fn negamax(&mut self, board: &Board, mut alpha: i8, mut beta: i8) -> i8 {
         let moves = board.valid_moves();
         if moves.len() == 0 { return 0 }

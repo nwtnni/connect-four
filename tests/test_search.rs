@@ -75,7 +75,7 @@ fn run_test(file: &'static str) {
     let mut times = Vec::new();
     for case in parse(file) {
         let start = Instant::now();
-        let guess = ai.negamax(&case.board, -SIZE, SIZE);
+        let guess = ai.null_window(&case.board);
         let stop = Instant::now();
         if guess == case.score { correct += 1; }
         times.push(elapsed(stop - start));
@@ -97,5 +97,5 @@ fn run_test(file: &'static str) {
 
 #[test]
 fn middle_easy() {
-    run_test(MIDDLE_MEDIUM);
+    run_test(BEGIN_EASY);
 }
