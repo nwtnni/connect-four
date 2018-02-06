@@ -79,8 +79,8 @@ fn run_test(file: &'static str, search: Search) {
     for mut case in parse(file) {
         let start = Instant::now();
         let guess = match search {
-            Search::Null => ai.null_window(&mut case.board),
-            Search::MTD => ai.mtdf(&mut case.board),
+            Search::Null => ai.null_window(&mut case.board, 30),
+            Search::MTD => ai.mtdf(&mut case.board, 30),
         };
         let stop = Instant::now();
         if guess == case.score { correct += 1; }

@@ -214,6 +214,10 @@ impl fmt::Display for Board {
             }
             write!(f, "\n")?;
         }
+        for col in 0..COLS {
+            write!(f, "{} ", col)?;
+        }
+        write!(f, "\n")?;
         Ok(())
     }
 }
