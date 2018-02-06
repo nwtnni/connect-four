@@ -61,18 +61,15 @@ impl AI {
         if moves.len() == 0 { return -(SIZE - board.moves)/2 }
         if board.moves >= SIZE - 2 { return 0 }
 
-        for &col in &moves {
-            if board.will_win(col) {
-                return (SIZE + 1 - board.moves)/2
-            }
-        }
+        let min = -(SIZE - 2 - board.moves) / 2;
+        if alpha < min { alpha = min }
+        if alpha >= beta { return alpha }
 
         let max = if let Some(bound) = self.table.get(board.key()) {
-            bound + MIN - 1
+            (bound + MIN - 1)
         } else {
-            (SIZE - 1 - board.moves) / 2
+            (SIZE - 1 - board.moves)/2
         };
-
         if beta > max { beta = max }
         if alpha >= beta { return beta }
 
