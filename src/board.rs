@@ -184,7 +184,7 @@ impl Board {
         w & (BOARD_MASK ^ all)
     }
 
-    fn get(&self, row: u8, col: u8) -> Option<i8> {
+    pub fn get(&self, row: u8, col: u8) -> Option<i8> {
         let mask = 1 << (col*7 + row);
         let (white, black) = if self.moves & 1 == 0 {
             (self.owned, self.owned ^ self.all)

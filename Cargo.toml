@@ -10,6 +10,4 @@ path = "src/lib.rs"
 [dependencies]
 text_io = "0.1.7"
 fnv = "1.0.6"
-gtk = "^0.3.0"
-relm = "^0.11.0"
-relm-derive = "^0.11.0"
+ggez = "0.4" 
