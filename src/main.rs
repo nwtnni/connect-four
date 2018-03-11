@@ -17,6 +17,12 @@ struct Game {
     next: u8,
 }
 
+const WIDTH: u32 = 500;
+const HEIGHT: u32 = 430;
+
+const RADIUS: f32 = 30.0;
+const OFFSET: f32 = 40.0;
+
 impl Game {
     fn new(ctx: &mut Context) -> GameResult<Game> {
         graphics::set_background_color(ctx, (0, 0, 0, 255).into());
@@ -32,13 +38,13 @@ impl Game {
 
 }
 
-fn to_coords(row: u8, col: u8) -> graphics::Point2 {
-        const scale: f32 = 10.0;
-        const x_offset: f32 = 10.0;
-        const y_offset: f32 = 10.0;
-        let col = col as f32;
-        let flipped = (ROWS - row) as f32;
-        graphics::Point2::new(x_offset + col*scale, y_offset + flipped*scale)
+fn to_point(row: u8, col: u8) -> graphics::Point2 {
+    let col = col as f32;
+    let row = (ROWS - row - 1) as f32;
+    graphics::Point2::new(
+        OFFSET + (OFFSET + RADIUS)*col,
+        OFFSET + (OFFSET + RADIUS)*row,
+    )
 }
 
 impl event::EventHandler for Game {
@@ -61,6 +67,13 @@ impl event::EventHandler for Game {
         
         for row in (0..ROWS).rev() {
             for col in 0..COLS {
+                graphics::circle(
+                    ctx,
+                    graphics::DrawMode::Fill,
+                    to_point(row, col),
+                    RADIUS,
+                    0.01
+                )?
             } 
         }
         graphics::present(ctx);
@@ -108,7 +121,7 @@ pub fn main() {
         .window_setup(conf::WindowSetup::default()
                       .title("Connect Four"))
         .window_mode(conf::WindowMode::default()
-                     .dimensions(640, 480));
+                     .dimensions(WIDTH, HEIGHT));
 
     let ctx = &mut cb.build().unwrap();
 
