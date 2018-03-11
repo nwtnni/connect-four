@@ -20,19 +20,20 @@ struct Game {
 const WIDTH: u32 = 500;
 const HEIGHT: u32 = 430;
 
+const STROKE: f32 = 2.0;
 const RADIUS: f32 = 30.0;
 const OFFSET: f32 = 40.0;
 
 impl Game {
     fn new(ctx: &mut Context) -> GameResult<Game> {
-        graphics::set_background_color(ctx, (0, 0, 0, 255).into());
+        graphics::set_background_color(ctx, (70, 114, 186, 255).into());
 
         Ok(Game {
             ai: AI::new(),
             board: Board::new(),
-            ready: false,
-            done: false,
-            next: 0,
+            ready: true,
+            done: true,
+            next: 8,
         }) 
     }
 
@@ -48,16 +49,17 @@ fn to_point(row: u8, col: u8) -> graphics::Point2 {
 }
 
 impl event::EventHandler for Game {
-    fn update(&mut self, ctx: &mut Context) -> GameResult<()> {
-        if self.ready && self.done {
-            // self.board.make_move(self.next);
-            // self.ready = false;
-            // self.done = false;
-        } else {
+    fn update(&mut self, _: &mut Context) -> GameResult<()> {
+        if self.ready && self.done && self.next < 8 {
+            self.board.make_move(self.next);
+            self.ready = false;
+            self.done = false;
+            self.next = 8;
+        } else if self.next < 8 {
             // let next = self.ai.solve(&mut self.board);
-            // self.board.make_move(next);
-            // self.ai.reset();
-            // self.done = true;
+            // self.board.make_move(self.next);
+            self.ai.reset();
+            self.done = true;
         }
         Ok(())
     }
@@ -67,13 +69,18 @@ impl event::EventHandler for Game {
         
         for row in (0..ROWS).rev() {
             for col in 0..COLS {
-                graphics::circle(
-                    ctx,
-                    graphics::DrawMode::Fill,
-                    to_point(row, col),
-                    RADIUS,
-                    0.01
-                )?
+                let color = match self.board.get(row, col) {
+                    Some(_) => graphics::Color::from_rgb(0, 0, 0),
+                _           => graphics::Color::from_rgb(90, 154, 254),
+                };
+                let fill = match self.board.get(row, col) {
+                    Some(WHITE) => graphics::DrawMode::Line(STROKE),
+                    _           => graphics::DrawMode::Fill,
+                };
+                graphics::set_color(ctx, graphics::Color::from_rgb(255, 255, 255))?;
+                graphics::circle(ctx, graphics::DrawMode::Fill, to_point(row, col), RADIUS, 0.01)?;
+                graphics::set_color(ctx, color)?;
+                graphics::circle(ctx, fill, to_point(row, col), RADIUS, 0.01)?
             } 
         }
         graphics::present(ctx);
@@ -109,15 +116,15 @@ impl event::EventHandler for Game {
                 self.next = 6;
             }
             Keycode::Escape => ctx.quit().unwrap(),
-            _ => (), // Do nothing
+            _ => return, // Do nothing
         }
-        self.done = true;
+        self.ready = true;
     }
 }
 
 
 pub fn main() {
-    let mut cb = ContextBuilder::new("connect-four", "nwtnni")
+    let cb = ContextBuilder::new("connect-four", "nwtnni")
         .window_setup(conf::WindowSetup::default()
                       .title("Connect Four"))
         .window_mode(conf::WindowMode::default()
@@ -126,11 +133,11 @@ pub fn main() {
     let ctx = &mut cb.build().unwrap();
 
     match Game::new(ctx) {
-        Err(e) => {
+        Err(_) => {
             println!("Could not load game.");
         }
         Ok(ref mut game) => {
-            let result = run(ctx, game).unwrap();
+            run(ctx, game).unwrap();
         }
     }
 
