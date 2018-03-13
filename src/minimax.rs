@@ -1,4 +1,3 @@
-use std::time::*;
 use board::*;
 use table::*;
 
@@ -7,12 +6,11 @@ pub const MIN: i8 = -SIZE/2 + 3;
 
 pub struct AI {
     table: Table,
-    timeout: Duration,
 }
 
 impl AI {
     pub fn new() -> Self {
-        AI { table: Table::new(), timeout: Duration::from_millis(500) }
+        AI { table: Table::new() }
     }
 
     pub fn reset(&mut self) {
