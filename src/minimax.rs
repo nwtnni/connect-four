@@ -19,18 +19,19 @@ impl AI {
 
     pub fn solve(&mut self, board: &mut Board) -> u8 {
         let safe = board.safe_moves();
-        let (mut best_score, mut best_col) = (SIZE, 3);
+        let mut best_score = SIZE;
+        let mut best_col = 3;
         for &col in &safe {
             if board.will_win(col) { return col }
         }
         for &col in &safe {
-            let score = self.null_window(board, 30);
+            let score = self.null_window(board);
             if score < best_score { best_score = score; best_col = col; }
         }
         best_col
     }
 
-    pub fn null_window(&mut self, board: &mut Board, depth: i8) -> i8 {
+    pub fn null_window(&mut self, board: &mut Board) -> i8 {
         let mut min = -(SIZE - board.moves)/2;
         let mut max = (SIZE+1 - board.moves)/2;
         while min < max {
@@ -38,26 +39,14 @@ impl AI {
             if mid <= 0 && min/2 < mid { mid = min/2 }
             else if mid >= 0 && max/2 > mid { mid = max/2 }
 
-            let score = self.negamax(board, mid, mid + 1, depth);
+            let score = self.negamax(board, mid, mid + 1);
             if score <= mid { max = score }
             else { min = score }
         }
         min
     }
 
-    pub fn mtdf(&mut self, board: &mut Board, depth: i8) -> i8 {
-        let mut score = 0;
-        let (mut lower, mut upper) = (-SIZE, SIZE);
-        while lower < upper {
-            let beta = if score == lower { score + 1 } else { score };
-            score = self.negamax(board, beta - 1, beta, depth);
-            if score < beta { upper = score } else { lower = score }
-        }
-        return score
-    }
-
-    pub fn negamax(&mut self, board: &mut Board, mut alpha: i8, mut beta: i8, depth: i8) -> i8 {
-        if depth == 0 { return 0 }
+    pub fn negamax(&mut self, board: &mut Board, mut alpha: i8, mut beta: i8) -> i8 {
         let moves = board.safe_moves();
         if moves.len() == 0 { return -(SIZE - board.moves)/2 }
         if board.moves >= SIZE - 2 { return 0 }
@@ -66,24 +55,24 @@ impl AI {
         if alpha < min { alpha = min }
         if alpha >= beta { return alpha }
 
-        let max = if let Some(bound) = self.table.get(board.key()) {
-            (bound + MIN - 1)
-        } else {
-            (SIZE - 1 - board.moves)/2
+        let max = match self.table.get(board.key()) {
+            Some(bound) => bound,
+            None        => (SIZE - 1 - board.moves) / 2
         };
+
         if beta > max { beta = max }
         if alpha >= beta { return beta }
 
         for col in moves {
             board.make_move(col);
-            let score = -self.negamax(board, -beta, -alpha, depth - 1);
+            let score = -self.negamax(board, -beta, -alpha);
             board.undo_move(col);
 
             if score >= beta { return score }
             if score > alpha { alpha = score }
         }
 
-        self.table.insert(board.key(), alpha - MIN + 1);
+        self.table.insert(board.key(), alpha);
         alpha
     }
 }

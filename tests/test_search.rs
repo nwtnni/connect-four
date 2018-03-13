@@ -14,9 +14,6 @@ const MIDDLE_MEDIUM: &'static str = "middle-medium.txt";
 const BEGIN_MEDIUM: &'static str = "begin-medium.txt";
 const BEGIN_HARD: &'static str = "begin-hard.txt";
 
-#[derive(Copy, Clone, Debug)]
-enum Search { Null, MTD }
-
 struct Case {
     board: Board,
     score: i8,
@@ -71,24 +68,21 @@ fn analyze(times: Vec<f64>) -> (f64, f64) {
     (mean, std)
 }
 
-fn run_test(file: &'static str, search: Search) {
+fn run_test(file: &'static str) {
     let mut ai = AI::new();
     let mut total = 0;
     let mut correct = 0;
     let mut times = Vec::new();
     for mut case in parse(file) {
         let start = Instant::now();
-        let guess = match search {
-            Search::Null => ai.null_window(&mut case.board, 30),
-            Search::MTD => ai.mtdf(&mut case.board, 30),
-        };
+        let guess = ai.null_window(&mut case.board);
         let stop = Instant::now();
         if guess == case.score { correct += 1; }
         times.push(elapsed(stop - start));
         total += 1;
     }
     let (mean, std) = analyze(times);
-    println!("Statistics for {}, {:?}", file, search);
+    println!("Statistics for {}", file);
     println!("Correctness: {}/{}", correct, total);
     println!("Mean search time: {}", mean);
     println!("Standard deviation: {}", std);
@@ -96,40 +90,20 @@ fn run_test(file: &'static str, search: Search) {
 
 #[test]
 fn end_easy_null() {
-    run_test(END_EASY, Search::Null);
-}
-
-#[test]
-fn end_easy_mtd() {
-    run_test(END_EASY, Search::MTD);
+    run_test(END_EASY);
 }
 
 #[test]
 fn middle_easy_null() {
-    run_test(MIDDLE_EASY, Search::Null);
-}
-
-#[test]
-fn middle_easy_mtd() {
-    run_test(MIDDLE_EASY, Search::MTD);
+    run_test(MIDDLE_EASY);
 }
 
 #[test]
 fn middle_medium_null() {
-    run_test(MIDDLE_MEDIUM, Search::Null);
-}
-
-#[test]
-fn middle_medium_mtd() {
-    run_test(MIDDLE_MEDIUM, Search::MTD);
+    run_test(MIDDLE_MEDIUM);
 }
 
 #[test]
 fn begin_easy_null() {
-    run_test(BEGIN_EASY, Search::Null);
-}
-
-#[test]
-fn begin_easy_mtd() {
-    run_test(BEGIN_EASY, Search::MTD);
+    run_test(BEGIN_EASY);
 }
