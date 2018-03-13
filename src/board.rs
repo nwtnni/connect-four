@@ -50,6 +50,8 @@ pub struct Board {
 impl Board {
     pub fn new() -> Self { Board { moves: 0, owned: 0, all: 0 } }
 
+    pub fn reset(&mut self) { self.moves = 0; self.owned = 0; self.all = 0; }
+
     pub fn valid_moves(&self) -> Vec<u8> {
         MOVE_ORDER.iter().filter(|&&col| {
             self.all & TOP_MASK[col as usize] == 0
@@ -126,8 +128,7 @@ impl Board {
     }
 
     fn score_move(&self, moved: u64) -> i8 {
-        -(Self::get_winning_positions(self.owned | moved, self.all | moved)
-            .count_ones() as i8)
+        -(Self::get_winning_positions(self.owned | moved, self.all | moved).count_ones() as i8)
     }
 
     fn safe(&self) -> u64 {

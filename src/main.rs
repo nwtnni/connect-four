@@ -1,20 +1,22 @@
 extern crate ggez;
 extern crate minimax;
 
+use std::path::PathBuf;
+
 use ggez::*;
 use ggez::event::*;
-use ggez::graphics::{DrawMode, Point2};
+use ggez::graphics::{Font};
 
 use minimax::board::*;
 use minimax::minimax::AI;
-use minimax::engine::*;
 
 struct Game {
     ai: AI,
     board: Board,
+    font: Font,
+    next: u8,
     ready: bool,
     done: bool,
-    next: u8,
 }
 
 const WIDTH: u32 = 500;
@@ -31,9 +33,10 @@ impl Game {
         Ok(Game {
             ai: AI::new(),
             board: Board::new(),
-            ready: true,
+            font: graphics::Font::new(ctx, "/OpenSans-Regular.ttf", 48)?,
+            next: 0,
+            ready: false,
             done: true,
-            next: 8,
         }) 
     }
 
@@ -44,18 +47,21 @@ fn to_point(row: u8, col: u8) -> graphics::Point2 {
     let row = (ROWS - row - 1) as f32;
     graphics::Point2::new(
         OFFSET + (OFFSET + RADIUS)*col,
-        OFFSET + (OFFSET + RADIUS)*row,
-    )
+        OFFSET + (OFFSET + RADIUS)*row,)
 }
 
 impl event::EventHandler for Game {
     fn update(&mut self, _: &mut Context) -> GameResult<()> {
-        if self.ready && self.done && self.next < 8 {
-            self.board.make_move(self.next);
-            self.ready = false;
-            self.done = false;
-            self.next = 8;
-        } else if self.next < 8 {
+        if self.board.was_won().is_some() {
+            return Ok(())
+        } else if self.ready && self.done {
+            if self.board.valid_moves().contains(&self.next) {
+                self.board.make_move(self.next);
+                self.ready = false;
+                self.done = false;
+                self.next = 8;
+            }
+        } else if !self.done {
             // let next = self.ai.solve(&mut self.board);
             // self.board.make_move(self.next);
             self.ai.reset();
@@ -82,6 +88,24 @@ impl event::EventHandler for Game {
                 graphics::set_color(ctx, color)?;
                 graphics::circle(ctx, fill, to_point(row, col), RADIUS, 0.01)?
             } 
+        }
+        if let Some(color) = self.board.was_won() {
+            let winner     = if color == WHITE { "White" } else { "Black "};
+            let over_text  = graphics::Text::new(ctx, "Game over!", &self.font)?;
+            let win_text   = graphics::Text::new(ctx, &format!("{} won!", winner), &self.font)?;
+            let (x, y)     = ((WIDTH / 2) as f32, (HEIGHT / 2) as f32);
+            let (ox, oy)   = ((over_text.width() / 2) as f32, (over_text.height() / 2) as f32);
+            let (wx, wy)   = ((win_text.width() / 2) as f32, (win_text.height() / 2) as f32);
+            let over_point = graphics::Point2::new(x - ox, y - (oy * 2.25));
+            let win_point  = graphics::Point2::new(x - wx, y + (wy * 0.75));
+            let paint = if color == WHITE {
+                graphics::Color::from_rgb(255, 255, 255)
+            } else {
+                graphics::Color::from_rgb(0, 0, 0)
+            };
+            graphics::set_color(ctx, paint)?;
+            graphics::draw(ctx, &over_text, over_point, 0.0)?; 
+            graphics::draw(ctx, &win_text, win_point, 0.0)?; 
         }
         graphics::present(ctx);
         timer::yield_now();
@@ -132,6 +156,12 @@ pub fn main() {
 
     let ctx = &mut cb.build().unwrap();
 
+    // Mount resources directory
+    let manifest_dir = env!("CARGO_MANIFEST_DIR");
+    let mut path = PathBuf::from(manifest_dir);
+    path.push("resources");
+    ctx.filesystem.mount(&path, true);
+
     match Game::new(ctx) {
         Err(_) => {
             println!("Could not load game.");
@@ -140,5 +170,4 @@ pub fn main() {
             run(ctx, game).unwrap();
         }
     }
-
 }
