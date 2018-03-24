@@ -19,12 +19,12 @@ struct Game {
     done: bool,
 }
 
-const WIDTH: u32 = 500;
-const HEIGHT: u32 = 430;
+const WIDTH: u32 = 1175;
+const HEIGHT: u32 = 1000;
 
 const STROKE: f32 = 2.0;
-const RADIUS: f32 = 30.0;
-const OFFSET: f32 = 40.0;
+const RADIUS: f32 = 60.0;
+const OFFSET: f32 = 100.0;
 
 impl Game {
     fn new(ctx: &mut Context) -> GameResult<Game> {
@@ -33,10 +33,10 @@ impl Game {
         Ok(Game {
             ai: AI::new(),
             board: Board::new(),
-            font: graphics::Font::new(ctx, "/OpenSans-Regular.ttf", 48)?,
-            next: 0,
+            font: graphics::Font::new(ctx, "/OpenSans-Regular.ttf", 36)?,
+            next: 8,
             ready: false,
-            done: true,
+            done: false,
         }) 
     }
 
@@ -63,8 +63,8 @@ impl event::EventHandler for Game {
                 self.next = 8;
             }
         } else if !self.done {
-            // let next = self.ai.solve(&mut self.board);
-            // self.board.make_move(self.next);
+            let next = self.ai.solve(&mut self.board);
+            self.board.make_move(next);
             self.done = true;
         }
         Ok(())
@@ -91,19 +91,14 @@ impl event::EventHandler for Game {
         }
         if let Some(color) = self.board.was_won() {
             let winner     = if color == WHITE { "White" } else { "Black "};
-            let over_text  = graphics::Text::new(ctx, "Game over!", &self.font)?;
-            let win_text   = graphics::Text::new(ctx, &format!("{} won!", winner), &self.font)?;
+            let over_text  = graphics::Text::new(ctx, &format!("Game over! {} won!", winner), &self.font)?;
+            let win_text   = graphics::Text::new(ctx, "Press W or B to play again as white or black.", &self.font)?;
             let (x, y)     = ((WIDTH / 2) as f32, (HEIGHT / 2) as f32);
             let (ox, oy)   = ((over_text.width() / 2) as f32, (over_text.height() / 2) as f32);
             let (wx, wy)   = ((win_text.width() / 2) as f32, (win_text.height() / 2) as f32);
             let over_point = graphics::Point2::new(x - ox, y - (oy * 2.25));
             let win_point  = graphics::Point2::new(x - wx, y + (wy * 0.75));
-            let paint = if color == WHITE {
-                graphics::Color::from_rgb(255, 255, 255)
-            } else {
-                graphics::Color::from_rgb(0, 0, 0)
-            };
-            graphics::set_color(ctx, paint)?;
+            graphics::set_color(ctx, graphics::Color::from_rgb(255,140,0))?;
             graphics::draw(ctx, &over_text, over_point, 0.0)?; 
             graphics::draw(ctx, &win_text, win_point, 0.0)?; 
         }
@@ -138,6 +133,18 @@ impl event::EventHandler for Game {
             }
             Keycode::Num7 => {
                 self.next = 6;
+            }
+            Keycode::W => {
+                self.board = Board::new();
+                self.next = 8;
+                self.ready = false;
+                self.done = true;
+            }
+            Keycode::B => {
+                self.board = Board::new();
+                self.next = 8;
+                self.ready = false;
+                self.done = false;
             }
             Keycode::Escape => ctx.quit().unwrap(),
             _ => return, // Do nothing

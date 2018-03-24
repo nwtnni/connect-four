@@ -26,7 +26,10 @@ impl AI {
         for &col in &safe {
 
             let score = if board.moves < 6 {
-                self.lookup.get(board.key())
+                board.make_move(col);
+                let score = self.lookup.get(board.key());
+                board.undo_move(col);
+                score
             } else {
                 self.negamax(board, -1, 1)
             };
