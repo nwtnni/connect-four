@@ -23,7 +23,6 @@ impl Player for Human {
 
 impl Player for AI {
     fn take_turn(&mut self, board: &mut Board) -> u8 {
-        self.reset();
         self.solve(board)
     }
 }

@@ -47,7 +47,8 @@ fn to_point(row: u8, col: u8) -> graphics::Point2 {
     let row = (ROWS - row - 1) as f32;
     graphics::Point2::new(
         OFFSET + (OFFSET + RADIUS)*col,
-        OFFSET + (OFFSET + RADIUS)*row,)
+        OFFSET + (OFFSET + RADIUS)*row,
+    )
 }
 
 impl event::EventHandler for Game {
@@ -64,7 +65,6 @@ impl event::EventHandler for Game {
         } else if !self.done {
             // let next = self.ai.solve(&mut self.board);
             // self.board.make_move(self.next);
-            self.ai.reset();
             self.done = true;
         }
         Ok(())

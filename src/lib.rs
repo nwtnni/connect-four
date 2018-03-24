@@ -4,4 +4,5 @@ extern crate fnv;
 pub mod board;
 pub mod engine;
 pub mod minimax;
+mod opening;
 mod table;

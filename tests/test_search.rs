@@ -7,31 +7,16 @@ use std::time::{Instant, Duration};
 use minimax::board::*;
 use minimax::minimax::*;
 
-const END_EASY: &'static str = "end-easy.txt";
-const MIDDLE_EASY: &'static str = "middle-easy.txt";
-const BEGIN_EASY: &'static str = "begin-easy.txt";
-const MIDDLE_MEDIUM: &'static str = "middle-medium.txt";
-const BEGIN_MEDIUM: &'static str = "begin-medium.txt";
-const BEGIN_HARD: &'static str = "begin-hard.txt";
+const END_EASY: &'static str = "end-easy.dat";
+const MIDDLE_EASY: &'static str = "middle-easy.dat";
+const BEGIN_EASY: &'static str = "begin-easy.dat";
+const MIDDLE_MEDIUM: &'static str = "middle-medium.dat";
+const BEGIN_MEDIUM: &'static str = "begin-medium.dat";
+const BEGIN_HARD: &'static str = "begin-hard.dat";
 
 struct Case {
     board: Board,
     score: i8,
-}
-
-trait Parse {
-    fn parse(moves: &str) -> Self;
-}
-
-impl Parse for Board {
-    fn parse(moves: &str) -> Self {
-        let mut board = Board::new();
-        for c in moves.chars() {
-            let c = (char::to_digit(c, 10).unwrap() - 1) as u8;
-            board.make_move(c);
-        }
-        board
-    }
 }
 
 fn read_file(file: &'static str) -> BufReader<File> {
@@ -45,7 +30,7 @@ fn parse(file: &'static str) -> Vec<Case> {
         let line = line.unwrap();
         let mut parts = line.split_whitespace();
         let moves = parts.next().unwrap();
-        let board = Board::parse(moves);
+        let board = Board::from(moves);
         let score = i8::from_str(parts.next().unwrap()).unwrap();
         cases.push(Case { board, score });
     }
@@ -75,7 +60,7 @@ fn run_test(file: &'static str) {
     let mut times = Vec::new();
     for mut case in parse(file) {
         let start = Instant::now();
-        let guess = ai.null_window(&mut case.board);
+        let guess = ai.negamax(&mut case.board, -1, 1);
         let stop = Instant::now();
         if guess == case.score { correct += 1; }
         times.push(elapsed(stop - start));
@@ -106,4 +91,14 @@ fn middle_medium_null() {
 #[test]
 fn begin_easy_null() {
     run_test(BEGIN_EASY);
+}
+
+#[test]
+fn begin_medium_null() {
+    run_test(BEGIN_MEDIUM);
+}
+
+#[test]
+fn begin_hard_null() {
+    run_test(BEGIN_HARD);
 }

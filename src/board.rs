@@ -50,6 +50,15 @@ pub struct Board {
 impl Board {
     pub fn new() -> Self { Board { moves: 0, owned: 0, all: 0 } }
 
+    pub fn from(moves: &str) -> Self {
+        let mut board = Board::new();
+        for c in moves.chars() {
+            let c = (char::to_digit(c, 10).unwrap() - 1) as u8;
+            board.make_move(c);
+        }
+        board
+    }
+
     pub fn reset(&mut self) { self.moves = 0; self.owned = 0; self.all = 0; }
 
     pub fn valid_moves(&self) -> Vec<u8> {
